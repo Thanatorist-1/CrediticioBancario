@@ -1,0 +1,38 @@
+services:
+
+  db:
+    image: postgres:16
+    container_name: crediticio_db
+    environment:
+      POSTGRES_DB: crediticio_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: credito_utp_bank
+    ports:
+      - "5433:5432"
+    volumes:
+      - crediticio_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crediticio_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: crediticio_app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/crediticio_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: credito_utp_bank
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
+      SPRING_SQL_INIT_MODE: always
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  crediticio_data:
