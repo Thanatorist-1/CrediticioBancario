@@ -15,7 +15,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import utp.edu.com.crediticio.model.cliente.Cliente;
 
@@ -31,8 +30,6 @@ public class Solicitud {
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
     @Transient
-    @NotNull(message = "Selecciona un cliente.")
-    @Positive(message = "El cliente seleccionado no es válido.")
     private Long idCliente;
     @NotBlank(message = "Selecciona el tipo de crédito.")
     @Pattern(regexp = "^(Personal|Vehicular|Hipotecario|Emprendimiento|Educativo)$", message = "Selecciona un tipo de crédito válido.")

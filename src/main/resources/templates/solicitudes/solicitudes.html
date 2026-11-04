@@ -94,6 +94,9 @@
                                                 <form method="post" th:action="@{/solicitudes/{id}/estado(id=${solicitud.idSolicitud})}">
                                                     <input type="hidden" name="estado" value="Rechazada"/>
                                                     <button class="btn btn-sm btn-outline-danger" th:disabled="${solicitud.estado == 'Rechazada'}">Rechazar</button></form>
+                                                <form method="post" th:action="@{/solicitudes/{id}/estado(id=${solicitud.idSolicitud})}">
+                                                    <input type="hidden" name="estado" value="Revisión manual"/>
+                                                    <button class="btn btn-sm btn-outline-warning" th:disabled="${solicitud.estado == 'Revisión manual'}">Revisión manual</button></form>
                                                 <form method="post" th:action="@{/solicitudes/eliminar/{id}(id=${solicitud.idSolicitud})}" onsubmit="return confirm('¿Eliminar esta solicitud?')">
                                                     <button class="btn btn-sm btn-outline-dark">Eliminar</button></form>
                                             </div>

@@ -28,7 +28,9 @@ public class EvaluacionService {
             Evaluacion existente = buscar(evaluacion.getIdEvaluacion());
             if (existente != null) evaluacion.setCodigo(existente.getCodigo());
         }
-        if (evaluacion.getIdSolicitud() == null) throw new IllegalArgumentException("Seleccione una solicitud.");
+        if (evaluacion.getIdSolicitud() == null || evaluacion.getIdSolicitud() <= 0) {
+            throw new IllegalArgumentException("Seleccione una solicitud válida.");
+        }
         Solicitud solicitud = solicitudRepository.findById(evaluacion.getIdSolicitud())
                 .orElseThrow(() -> new IllegalArgumentException("La solicitud seleccionada no existe."));
         evaluacion.setSolicitud(solicitud);
@@ -56,9 +58,10 @@ public class EvaluacionService {
                 case "Rechazado" -> "Rechazada";
                 default -> "Revisión manual";
             });
-            solicitudRepository.save(solicitud);
+            solicitudRepository.saveAndFlush(solicitud);
         }
-        return evaluacionRepository.save(evaluacion);
+        // La solicitud y la evaluación se confirman juntas por @Transactional.
+        return evaluacionRepository.saveAndFlush(evaluacion);
     }
 
     public void eliminar(Long id) { evaluacionRepository.deleteById(id); }

@@ -35,7 +35,9 @@ public class SolicitudService {
             Solicitud existente = buscar(solicitud.getIdSolicitud());
             if (existente != null) solicitud.setCodigo(existente.getCodigo());
         }
-        if (solicitud.getIdCliente() == null) throw new IllegalArgumentException("Seleccione un cliente.");
+        if (solicitud.getIdCliente() == null || solicitud.getIdCliente() <= 0) {
+            throw new IllegalArgumentException("Seleccione un cliente válido.");
+        }
         Cliente cliente = clienteRepository.findById(solicitud.getIdCliente())
                 .orElseThrow(() -> new IllegalArgumentException("El cliente seleccionado no existe."));
         solicitud.setCliente(cliente);
@@ -58,14 +60,15 @@ public class SolicitudService {
             throw new IllegalArgumentException("El estado indicado no es válido.");
         }
         solicitud.setEstado(estado);
-        Solicitud guardada = solicitudRepository.save(solicitud);
+        // Fuerza el UPDATE dentro de la transacción para detectar errores de BD aquí.
+        Solicitud guardada = solicitudRepository.saveAndFlush(solicitud);
         evaluacionRepository.findFirstBySolicitud_IdSolicitud(id).ifPresent(evaluacion -> {
             evaluacion.setResultado(switch (estado) {
                 case "Aprobada" -> "Aprobado";
                 case "Rechazada" -> "Rechazado";
                 default -> estado;
             });
-            evaluacionRepository.save(evaluacion);
+            evaluacionRepository.saveAndFlush(evaluacion);
         });
         return guardada;
     }

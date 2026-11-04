@@ -13,7 +13,7 @@
     
     <groupId>utp.edu.com</groupId>
     <artifactId>CrediticioBancario</artifactId>
-    <version>1.19.0</version>
+    <version>1.23.0</version>
     <packaging>jar</packaging>
     
     <properties>

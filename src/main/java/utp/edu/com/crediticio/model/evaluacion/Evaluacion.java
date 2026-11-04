@@ -14,7 +14,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import utp.edu.com.crediticio.model.solicitud.Solicitud;
 
@@ -30,8 +29,6 @@ public class Evaluacion {
     @JoinColumn(name = "solicitud_id", nullable = false)
     private Solicitud solicitud;
     @Transient
-    @NotNull(message = "Selecciona una solicitud.")
-    @Positive(message = "La solicitud seleccionada no es válida.")
     private Long idSolicitud;
     @Min(value = 0, message = "El puntaje mínimo es 0.")
     @Max(value = 850, message = "El puntaje máximo es 850.")

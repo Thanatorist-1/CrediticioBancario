@@ -2,6 +2,8 @@ package utp.edu.com.crediticio.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import utp.edu.com.crediticio.service.solicitud.SolicitudService;
 
 @Controller
 public class EvaluacionController {
+    private static final Logger log = LoggerFactory.getLogger(EvaluacionController.class);
     private final EvaluacionService evaluacionService;
     private final SolicitudService solicitudService;
 
@@ -103,6 +106,10 @@ public class EvaluacionController {
             flash.addFlashAttribute("mensaje", "Decisión registrada correctamente.");
         } catch (IllegalArgumentException exception) {
             flash.addFlashAttribute("error", exception.getMessage());
+        } catch (RuntimeException exception) {
+            log.error("No se pudo guardar la decisión de la evaluación {}", id, exception);
+            flash.addFlashAttribute("error",
+                    "No se pudo guardar la decisión. Revisa el detalle en la consola del servidor.");
         }
         return "redirect:/evaluaciones/detalle?id=" + id;
     }

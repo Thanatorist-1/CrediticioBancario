@@ -1,86 +1,111 @@
-# Sistema Crediticio Bancario — versión 1.20
+# Sistema Crediticio Bancario — versión 1.23
 
-Aplicación académica para registrar clientes y solicitudes de crédito, consultar evaluaciones y generar reportes. Esta versión usa PostgreSQL para guardar la información.
+Aplicación web académica para registrar clientes y solicitudes de crédito, guardar evaluaciones y consultar reportes. Esta versión conecta las pantallas con una base PostgreSQL.
 
 ## Tecnologías
 
 - Java 21 y Spring Boot 3.3
-- Spring Web MVC y Thymeleaf para las páginas web
-- HTML, CSS, JavaScript y Bootstrap
+- Spring Web MVC y Thymeleaf para rutas y páginas web
+- HTML, CSS, JavaScript puntual y Bootstrap 5.3.8 por CDN
 - Spring Boot Validation / Jakarta Bean Validation
 - Spring Data JPA e Hibernate
 - PostgreSQL
-- Apache PDFBox para reportes PDF
-- Maven Wrapper para ejecutar el proyecto
+- Apache PDFBox para descargar reportes en PDF
+- Maven mediante Maven Wrapper
 
-## Estructura
+## Organización del proyecto
 
 ```text
 src/main/java/utp/edu/com/crediticio/
-├── CrediticioBancarioApplication.java  Inicio de la aplicación
-├── controller/                         Recibe las rutas y formularios
-├── model/                              Entidades y modelos de formularios
-├── repository/                         Consulta y guarda datos con Spring Data
-└── service/                            Coordina las operaciones del sistema
+├── CrediticioBancarioApplication.java
+├── controller/       Recibe rutas y formularios web
+├── model/            Entidades y modelos de formularios
+├── repository/       Busca y guarda entidades con Spring Data JPA
+└── service/          Coordina las operaciones del sistema
 
 src/main/resources/
-├── templates/                          Páginas Thymeleaf por módulo
-├── static/css/                         Estilos
-├── static/img/                         Logotipo e imagen
-├── static/js/                          JavaScript del navegador
-├── application.properties              Puerto y conexión a PostgreSQL
-└── data.sql                            Datos de demostración
+├── templates/        Páginas Thymeleaf por módulo
+├── static/css/       Estilos
+├── static/img/       Logotipo
+├── static/js/        Scripts del navegador
+├── application.properties
+└── data.sql          Registros de demostración relacionados
 ```
 
-La aplicación reúne los módulos en un solo proyecto y organiza el backend por responsabilidades. Spring MVC conecta las rutas de los controladores con las vistas Thymeleaf.
+El backend es una aplicación monolítica organizada por responsabilidades. En la interfaz usa el flujo MVC de Spring: el navegador solicita una ruta, el controlador procesa la acción y devuelve una vista Thymeleaf.
 
-## Módulos principales
+### Flujo de una operación
+
+```text
+Navegador → Controller → Service → Repository → PostgreSQL
+     ↑                                      ↓
+     └──────── Vista Thymeleaf ←────────────┘
+```
+
+- **Controller:** recibe la solicitud web y decide qué página devolver.
+- **Service:** coordina la acción y las reglas del módulo.
+- **Repository:** consulta o guarda datos con Spring Data JPA.
+- **Model:** representa entidades como `Cliente`, `Solicitud` y `Evaluacion`.
+- **Thymeleaf:** muestra en HTML los datos preparados por el backend.
+
+## Módulos
 
 - Panel administrativo
-- Clientes y perfiles
-- Solicitudes de crédito
-- Evaluaciones
-- Políticas
-- Usuarios internos
-- Reportes y descarga de PDF
+- Clientes: registro, consulta, edición y eliminación
+- Solicitudes: registro, detalle, actualización de estado y eliminación
+- Evaluaciones: registro, detalle y decisión
+- Políticas: administración de criterios
+- Usuarios internos: directorio del personal
+- Reportes: resumen y descarga de PDF
 
-## Base de datos y muestra
+## Base de datos y datos de muestra
 
-1. Inicia PostgreSQL y crea una base de datos llamada `crediticio_db`.
-2. Revisa `src/main/resources/application.properties` y configura la URL, usuario y contraseña de tu PostgreSQL.
-3. `spring.jpa.hibernate.ddl-auto=update` crea o actualiza las tablas del proyecto; no crea la base de datos.
-4. Al iniciar, Spring Boot ejecuta `src/main/resources/data.sql` después de preparar las tablas.
+1. Inicia PostgreSQL y crea una base llamada `crediticio_db` desde pgAdmin o ejecutando `CREATE DATABASE crediticio_db;`.
+2. Revisa `src/main/resources/application.properties` y configura el puerto, URL, usuario y contraseña de tu PostgreSQL.
+3. `spring.jpa.hibernate.ddl-auto=update` crea o actualiza las tablas mapeadas; **no crea la base de datos**.
+4. Al iniciar la aplicación, `data.sql` carga registros de demostración: clientes, solicitudes, evaluaciones, políticas y usuarios. Las inserciones comprueban si el registro ya existe para evitar duplicar la muestra al reiniciar.
 
-`data.sql` contiene 10 clientes y 10 solicitudes de demostración. Las inserciones revisan si el DNI o código ya existe, para que reiniciar la aplicación no duplique esos datos. Las solicitudes están vinculadas con sus clientes.
+Las solicitudes están relacionadas con sus clientes y las evaluaciones con sus solicitudes. Si vacías las tablas y vuelves a iniciar la aplicación, los datos de muestra se insertarán nuevamente.
 
-## Validaciones
-
-Los formularios verifican campos en el navegador y vuelven a validarlos en el servidor con Jakarta Bean Validation. Cuando un dato no es válido, el sistema muestra un mensaje para corregirlo.
-
-## JavaScript y acceso
-
-Los datos de clientes y solicitudes se gestionan desde el backend y PostgreSQL. `app.js` se usa para la navegación del acceso demostrativo; `dataSeed.js` y `dataService.js` permanecen como archivos antiguos y las plantillas no los cargan como fuente activa de datos. El acceso todavía no autentica usuarios con Spring Security.
-
-La sección de ofertas aún no guarda información en la base de datos.
-
-## Ejecutar el proyecto
+## Cómo ejecutar
 
 Requisitos: Java 21 y PostgreSQL en ejecución.
 
-Desde PowerShell, en la carpeta raíz del proyecto:
+Desde la carpeta raíz del proyecto, en PowerShell:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
-Conectar o poner la credencial de la contraseña en application.properties (se usa postgreSQL)
-También puedes abrir el proyecto en NetBeans y ejecutar `CrediticioBancarioApplication.java`.
 
-Luego visita:
+También puedes abrir la carpeta del proyecto en NetBeans y ejecutar `CrediticioBancarioApplication.java`.
+
+Cuando el servidor esté iniciado, abre:
 
 ```text
 http://localhost:8080
 ```
 
-## Nota sobre la configuración
+## Validaciones y JavaScript
 
-Las credenciales se guardan en el archivo local `application.properties`. No las compartas en repositorios o copias públicas.
+Los formularios validan datos en el navegador y nuevamente en el servidor con Jakarta Bean Validation. El servidor puede mostrar mensajes junto a los campos que necesitan corrección.
+
+Los datos de clientes, solicitudes, evaluaciones y reportes se consultan desde PostgreSQL; no se utiliza `localStorage` para persistirlos. `app.js` se usa en el acceso demostrativo. `dataSeed.js` y `dataService.js` permanecen en `static/js`, pero las plantillas no los cargan como fuente activa de datos.
+
+## Alcance actual
+
+- El acceso es demostrativo: todavía no autentica al usuario ni protege módulos con Spring Security.
+- Los registros de usuarios representan un directorio; no son cuentas de inicio de sesión.
+- La sección de ofertas aún no persiste sus datos en PostgreSQL.
+- Es un proyecto académico para mostrar el flujo de evaluación; no determina por sí solo la aprobación de un crédito bancario real.
+
+## Decisiones de solicitudes y evaluaciones
+
+- Aprobar, rechazar o enviar a revisión manual actualiza el estado de la solicitud.
+- Si existe una evaluación enlazada, también se actualiza su resultado para mantener ambos registros sincronizados.
+- Los cambios se guardan juntos en una transacción: si falla una escritura, no queda una mitad del cambio aplicada.
+- Si ocurre un error al guardar, la pantalla vuelve al módulo y muestra un aviso; el detalle técnico se conserva en la consola del servidor.
+- Los identificadores auxiliares de los formularios (`idCliente` e `idSolicitud`) son transitorios. Se comprueban al guardar el formulario desde el servicio y no se validan como columnas de la entidad al cambiar estados.
+
+## Configuración local
+
+Las credenciales de PostgreSQL se configuran localmente en `application.properties`. No incluyas contraseñas reales en copias públicas o repositorios compartidos.
