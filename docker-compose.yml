@@ -1,12 +1,10 @@
 services:
-
   db:
-    image: postgres:16
-    container_name: crediticio_db
+    image: postgres:17
     environment:
       POSTGRES_DB: crediticio_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: credito_utp_bank
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en un archivo .env local}
     ports:
       - "5433:5432"
     volumes:
@@ -19,17 +17,16 @@ services:
 
   app:
     build: .
-    container_name: crediticio_app
     ports:
       - "8080:8080"
     environment:
+      PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/crediticio_db
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: credito_utp_bank
-      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
-      SPRING_SQL_INIT_MODE: always
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_SCHEMA: crediticio
+      DEMO_SEED_ENABLED: "false"
+      SERVICIO_DATOS_URL: ${SERVICIO_DATOS_URL:-http://host.docker.internal:8081}
     depends_on:
       db:
         condition: service_healthy
