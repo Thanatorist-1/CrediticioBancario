@@ -6,6 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -32,6 +35,11 @@ public class Usuario {
     private String rol;
     @Pattern(regexp = "^(Activo|Inactivo)?$", message = "Selecciona un estado válido.")
     private String estado;
+    @JsonIgnore
+    private String passwordHash;
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String claveNueva;
 
     public Usuario() { }
     public Long getIdUsuario() { return idUsuario; }
@@ -46,5 +54,9 @@ public class Usuario {
     public void setRol(String rol) { this.rol = rol; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getClaveNueva() { return claveNueva; }
+    public void setClaveNueva(String claveNueva) { this.claveNueva = claveNueva; }
 }
 

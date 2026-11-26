@@ -20,26 +20,28 @@
                         <a class="btn btn-dark text-start" th:href="@{/clientes}">Clientes</a>
                         <a class="btn btn-primary text-start" th:href="@{/solicitudes}">Solicitudes</a>
                         <a class="btn btn-dark text-start" th:href="@{/evaluaciones}">Evaluaciones</a>
+                        <a class="btn btn-dark text-start" th:href="@{/consultas-simuladas}">Consulta simulada</a>
                         <a class="btn btn-dark text-start" th:href="@{/politicas}">Políticas</a>
-                        <a class="btn btn-dark text-start" th:href="@{/usuarios}">Personal del banco</a>
+                        <a th:if="${session.rolActual == 'Administrador'}" class="btn btn-dark text-start" th:href="@{/tipos-credito}">Tipos de crédito</a>
+                        <a class="btn btn-dark text-start" th:if="${session.rolActual == 'Administrador'}" th:href="@{/usuarios}">Personal del banco</a>
                         <a class="btn btn-dark text-start" th:href="@{/reportes}">Reportes</a>
-                        <a class="btn btn-danger text-start mt-4" th:href="@{/login}">Cerrar sesión</a>
+                        <a class="btn btn-danger text-start mt-4" th:href="@{/logout}">Cerrar sesión</a>
                     </div>
                 </aside>
                 <main class="col-md-9 col-lg-10 p-4">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                         <div>
                             <h2 class="mb-1">Solicitudes de crédito</h2>
-                            <p class="text-muted mb-0">Consulta y administra el estado de cada solicitud.</p>
+                            <p class="text-muted mb-0">Consulta y filtra las solicitudes de crédito.</p>
                         </div>
-                        <a class="btn btn-primary" th:href="@{/solicitudes/registrar}">+ Nueva solicitud</a></div>
+                        <span class="badge text-bg-info">Las solicitudes se registran desde el portal del cliente</span></div>
                     <div class="alert alert-success" th:if="${mensaje}" th:text="${mensaje}">
                     </div>
                     <div class="alert alert-danger" th:if="${error}" th:text="${error}">
                     </div>
                     <div class="card shadow-sm mb-4">
                         <div class="card-body">
-                            <form class="row g-3" method="get" th:action="@{/solicitudes}">
+                                <form id="filtro-solicitudes" class="row g-3" method="get" th:action="@{/solicitudes}" data-api-url="/api/v1/solicitudes">
                                 <div class="col-md-6"><label class="form-label" for="buscar">Buscar por cliente, DNI o código</label>
                                     <input id="buscar" class="form-control" name="texto" th:value="${texto}" placeholder="Ej. Claudia Ramos o SOL-001"/>
                                 </div>
@@ -71,40 +73,8 @@
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr th:each="solicitud : ${solicitudes}">
-                                        <td class="fw-semibold" th:text="${solicitud.codigo ?: '—'}">SOL-001</td>
-                                        <td><span th:text="${solicitud.cliente != null ? solicitud.cliente.nombre : 'Cliente sin vincular'}">Cliente</span><br/><small class="text-muted" th:text="${solicitud.cliente != null ? solicitud.cliente.dni : 'Revisar registro'}"></small></td>
-                                        <td th:text="${solicitud.tipoCredito ?: '—'}">
-                                        </td>
-                                        <td th:text="${solicitud.monto != null ? 'S/ ' + #numbers.formatDecimal(solicitud.monto, 1, 'COMMA', 2, 'POINT') : '—'}">
-                                        </td>
-                                        <td th:text="${solicitud.plazoMeses != null ? solicitud.plazoMeses + ' meses' : '—'}">
-                                        </td>
-                                        <td th:text="${solicitud.fecha ?: '—'}">
-                                        </td>
-                                        <td><span class="badge text-bg-secondary" th:text="${solicitud.estado ?: 'Pendiente'}">Pendiente</span></td>
-                                        <td>
-                                            <div class="d-flex flex-wrap gap-1">
-                                                <a class="btn btn-sm btn-outline-primary" th:href="@{/solicitudes/detalle(id=${solicitud.idSolicitud})}">Ver</a>
-                                                <a class="btn btn-sm btn-outline-secondary" th:href="@{/solicitudes/editar/{id}(id=${solicitud.idSolicitud})}">Editar</a>
-                                                <form method="post" th:action="@{/solicitudes/{id}/estado(id=${solicitud.idSolicitud})}">
-                                                    <input type="hidden" name="estado" value="Aprobada"/>
-                                                    <button class="btn btn-sm btn-success" th:disabled="${solicitud.estado == 'Aprobada'}">Aprobar</button></form>
-                                                <form method="post" th:action="@{/solicitudes/{id}/estado(id=${solicitud.idSolicitud})}">
-                                                    <input type="hidden" name="estado" value="Rechazada"/>
-                                                    <button class="btn btn-sm btn-outline-danger" th:disabled="${solicitud.estado == 'Rechazada'}">Rechazar</button></form>
-                                                <form method="post" th:action="@{/solicitudes/{id}/estado(id=${solicitud.idSolicitud})}">
-                                                    <input type="hidden" name="estado" value="Revisión manual"/>
-                                                    <button class="btn btn-sm btn-outline-warning" th:disabled="${solicitud.estado == 'Revisión manual'}">Revisión manual</button></form>
-                                                <form method="post" th:action="@{/solicitudes/eliminar/{id}(id=${solicitud.idSolicitud})}" onsubmit="return confirm('¿Eliminar esta solicitud?')">
-                                                    <button class="btn btn-sm btn-outline-dark">Eliminar</button></form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr th:if="${#lists.isEmpty(solicitudes)}">
-                                        <td colspan="8" class="text-center text-muted py-5">No hay solicitudes que coincidan. Puedes registrar una nueva.</td>
-                                    </tr>
+                                <tbody id="filas-solicitudes">
+                                    <tr id="estado-tabla-solicitudes"><td colspan="8" class="text-center text-muted py-5">Cargando solicitudes...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -112,5 +82,7 @@
                 </main>
             </div>
         </div>
+        <script th:src="@{/js/solicitudes-api.js(v=20261117)}" defer></script>
+            <script th:src="@{/js/json-forms.js(v=2)}" defer></script>
     </body>
 </html>

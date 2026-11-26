@@ -32,7 +32,7 @@ public class Solicitud {
     @Transient
     private Long idCliente;
     @NotBlank(message = "Selecciona el tipo de crédito.")
-    @Pattern(regexp = "^(Personal|Vehicular|Hipotecario|Emprendimiento|Educativo)$", message = "Selecciona un tipo de crédito válido.")
+    @Size(max = 40, message = "El código del crédito es demasiado largo.")
     private String tipoCredito;
     @NotNull(message = "Ingresa el monto solicitado.")
     @DecimalMin(value = "500.00", message = "El monto mínimo es S/ 500.")

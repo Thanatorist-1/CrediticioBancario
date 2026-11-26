@@ -19,8 +19,10 @@
                         <a class="btn btn-dark text-start" th:href="@{/clientes}">Clientes</a>
                         <a class="btn btn-dark text-start" th:href="@{/solicitudes}">Solicitudes</a>
                         <a class="btn btn-dark text-start" th:href="@{/evaluaciones}">Evaluaciones</a>
+                        <a class="btn btn-dark text-start" th:href="@{/consultas-simuladas}">Consulta simulada</a>
                         <a class="btn btn-dark text-start" th:href="@{/politicas}">Políticas</a>
-                        <a class="btn btn-primary text-start" th:href="@{/usuarios}">Personal del banco</a>
+                        <a th:if="${session.rolActual == 'Administrador'}" class="btn btn-dark text-start" th:href="@{/tipos-credito}">Tipos de crédito</a>
+                        <a class="btn btn-primary text-start" th:if="${session.rolActual == 'Administrador'}" th:href="@{/usuarios}">Personal del banco</a>
                         <a class="btn btn-dark text-start" th:href="@{/reportes}">Reportes</a></div>
                 </aside>
                 <main class="col-md-9 col-lg-10 p-4">
@@ -62,7 +64,7 @@
                                         <td>
                                             <div class="d-flex gap-2">
                                                 <a class="btn btn-sm btn-outline-secondary" th:href="@{/usuarios/editar/{id}(id=${usuario.idUsuario})}">Editar</a>
-                                                <form method="post" th:action="@{/usuarios/eliminar/{id}(id=${usuario.idUsuario})}" onsubmit="return confirm('¿Eliminar este usuario?')">
+                                                <form method="post" th:attr="data-json-api=@{/api/v1/personal/{id}(id=${usuario.idUsuario})}" data-json-method="DELETE" data-json-confirm="¿Confirmas que deseas eliminar este registro?" data-json-redirect="/usuarios">
                                                     <button class="btn btn-sm btn-outline-danger">Eliminar</button></form>
                                             </div>
                                         </td>
@@ -77,5 +79,6 @@
                 </main>
             </div>
         </div>
+            <script th:src="@{/js/json-forms.js(v=2)}" defer></script>
     </body>
 </html>

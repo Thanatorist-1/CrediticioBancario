@@ -16,9 +16,9 @@
                     <h2 th:text="${usuario.idUsuario == null ? 'Registrar usuario interno' : 'Editar usuario interno'}">Usuario interno</h2>
                     <p class="text-muted mb-0">Ingresa los datos institucionales del trabajador.</p>
                 </div>
-                <a class="btn btn-outline-secondary" th:href="@{/usuarios}">Volver</a></div>
-            <div class="alert alert-info">Este registro aún no habilita credenciales; la autenticación corresponde a una etapa posterior.</div>
-            <form class="card shadow-sm" th:object="${usuario}" th:action="@{/usuarios/guardar}" method="post">
+                <a class="btn btn-outline-secondary" th:if="${session.rolActual == 'Administrador'}" th:href="@{/usuarios}">Volver</a></div>
+            <div class="alert alert-info">El trabajador iniciará sesión con su correo y la contraseña definida aquí.</div>
+            <form class="card shadow-sm" th:object="${usuario}" th:action="@{/usuarios/guardar}" method="post" data-json-api="/api/v1/personal" data-json-id-field="idUsuario" data-json-redirect="/usuarios">
                 <div class="card-body">
                     <input type="hidden" th:field="*{idUsuario}"/>
                     <div class="row g-3">
@@ -32,6 +32,7 @@
                             <div class="text-danger small" th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}">
                             </div>
                         </div>
+                        <div class="col-md-6"><label class="form-label" for="claveNueva">Contraseña inicial / nueva contraseña</label><input id="claveNueva" class="form-control" type="password" th:field="*{claveNueva}" minlength="8" th:required="${usuario.idUsuario == null}"/><div class="form-text">Mínimo 8 caracteres. Déjalo vacío al editar para conservar la actual.</div></div>
                         <div class="col-md-6"><label class="form-label" for="cargo">Cargo</label>
                             <input id="cargo" class="form-control" th:field="*{cargo}" maxlength="100"/>
                             <div class="text-danger small" th:if="${#fields.hasErrors('cargo')}" th:errors="*{cargo}">
@@ -58,8 +59,9 @@
                 </div>
                 <div class="card-footer bg-white">
                     <button class="btn btn-primary" type="submit">Guardar usuario</button>
-                    <a class="btn btn-outline-secondary ms-2" th:href="@{/usuarios}">Cancelar</a></div>
+                    <a class="btn btn-outline-secondary ms-2" th:if="${session.rolActual == 'Administrador'}" th:href="@{/usuarios}">Cancelar</a></div>
             </form>
         </main>
+            <script th:src="@{/js/json-forms.js(v=2)}" defer></script>
     </body>
 </html>

@@ -1,6 +1,7 @@
 package utp.edu.com.crediticio.model.evaluacion;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,21 +36,55 @@ public class Evaluacion {
     private Integer puntaje;
     @Pattern(regexp = "^(Por evaluar|Bajo|Medio|Alto)?$", message = "Selecciona un nivel de riesgo válido.")
     private String nivelRiesgo;
-    @Pattern(regexp = "^(Pendiente|Aprobado|Rechazado|Revisión manual)?$", message = "Selecciona un resultado válido.")
+    @Pattern(regexp = "^(Aprobado|Rechazado|Revisión manual)?$", message = "El resultado debe ser Aprobado, Rechazado o Revisión manual.")
     private String resultado;
     @Size(max = 100, message = "La política no puede superar 100 caracteres.")
     private String politica;
-    @DecimalMin(value = "0.0", message = "El ingreso disponible no puede ser negativo.")
     private BigDecimal ingresoDisponible;
     @DecimalMin(value = "0.0", message = "El DTI no puede ser negativo.")
-    @Max(value = 100, message = "El DTI no puede superar 100 %.")
     private BigDecimal dti;
     @DecimalMin(value = "0.0", message = "La capacidad de cuota no puede ser negativa.")
     private BigDecimal capacidadNuevaCuota;
     @DecimalMin(value = "0.0", message = "El monto máximo no puede ser negativo.")
     private BigDecimal montoMaximoEstimado;
     @Size(max = 1000, message = "El comentario no puede superar 1000 caracteres.")
+    @jakarta.persistence.Column(length = 1000)
     private String comentario;
+    // Requerimiento adicional editable por el personal, sin cambiar el resultado automático.
+    @jakarta.persistence.Column(length = 800)
+    private String requerimientoDocumental;
+
+    private String fuenteScore;
+    private BigDecimal ingresosExternos;
+    private BigDecimal deudaExterna;
+    private BigDecimal saldoDeudaPendiente;
+    private Integer cuotasAtrasadas;
+    private Boolean historialNegativo;
+    private Boolean trabajaActualmente;
+    private Boolean identidadVerificadaExterna;
+    private Boolean personaActivaExterna;
+    private LocalDateTime fechaConsultaExterna;
+
+    public Boolean getTrabajaActualmente() { return trabajaActualmente; }
+    public void setTrabajaActualmente(Boolean v) { trabajaActualmente=v; }
+    public Boolean getIdentidadVerificadaExterna() { return identidadVerificadaExterna; }
+    public void setIdentidadVerificadaExterna(Boolean v) { identidadVerificadaExterna=v; }
+    public Boolean getPersonaActivaExterna() { return personaActivaExterna; }
+    public void setPersonaActivaExterna(Boolean v) { personaActivaExterna=v; }
+    public String getFuenteScore() { return fuenteScore; }
+    public void setFuenteScore(String v) { fuenteScore=v; }
+    public BigDecimal getIngresosExternos() { return ingresosExternos; }
+    public void setIngresosExternos(BigDecimal v) { ingresosExternos=v; }
+    public BigDecimal getDeudaExterna() { return deudaExterna; }
+    public BigDecimal getSaldoDeudaPendiente() { return saldoDeudaPendiente; }
+    public void setSaldoDeudaPendiente(BigDecimal v) { saldoDeudaPendiente=v; }
+    public void setDeudaExterna(BigDecimal v) { deudaExterna=v; }
+    public Integer getCuotasAtrasadas() { return cuotasAtrasadas; }
+    public void setCuotasAtrasadas(Integer v) { cuotasAtrasadas=v; }
+    public Boolean getHistorialNegativo() { return historialNegativo; }
+    public void setHistorialNegativo(Boolean v) { historialNegativo=v; }
+    public LocalDateTime getFechaConsultaExterna() { return fechaConsultaExterna; }
+    public void setFechaConsultaExterna(LocalDateTime v) { fechaConsultaExterna=v; }
 
     public Evaluacion() { }
 
@@ -77,6 +112,8 @@ public class Evaluacion {
     public void setCapacidadNuevaCuota(BigDecimal capacidadNuevaCuota) { this.capacidadNuevaCuota = capacidadNuevaCuota; }
     public BigDecimal getMontoMaximoEstimado() { return montoMaximoEstimado; }
     public void setMontoMaximoEstimado(BigDecimal montoMaximoEstimado) { this.montoMaximoEstimado = montoMaximoEstimado; }
+    public String getRequerimientoDocumental() { return requerimientoDocumental; }
+    public void setRequerimientoDocumental(String texto) { this.requerimientoDocumental = texto; }
     public String getComentario() { return comentario; }
     public void setComentario(String comentario) { this.comentario = comentario; }
 }

@@ -16,7 +16,8 @@
                     <h5 class="text-white mb-4">Menú</h5>
                     <div class="d-grid gap-2">
                         <a class="btn btn-primary text-start" th:href="@{/evaluaciones}">Evaluaciones</a>
-                        <a class="btn btn-danger text-start mt-4" th:href="@{/login}">Cerrar sesión</a></div>
+                        <a class="btn btn-dark text-start" th:href="@{/consultas-simuladas}">Consulta simulada</a>
+                        <a class="btn btn-danger text-start mt-4" th:href="@{/logout}">Cerrar sesión</a></div>
                 </aside>
                 <main class="col-md-9 col-lg-10 p-4">
                     <p class="section-eyebrow mb-1">Siguiente etapa</p>
@@ -26,5 +27,6 @@
                     <a class="btn btn-primary" th:href="@{/evaluaciones}">Ir a evaluaciones</a></main>
             </div>
         </div>
+            <script th:src="@{/js/json-forms.js(v=2)}" defer></script>
     </body>
 </html>

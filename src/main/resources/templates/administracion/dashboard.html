@@ -23,10 +23,12 @@
                         <a class="btn btn-dark text-start" th:href="@{/clientes}">Clientes</a>
                         <a class="btn btn-dark text-start" th:href="@{/solicitudes}">Solicitudes</a>
                         <a class="btn btn-dark text-start" th:href="@{/evaluaciones}">Evaluaciones</a>
+                        <a class="btn btn-dark text-start" th:href="@{/consultas-simuladas}">Consulta simulada</a>
                         <a class="btn btn-dark text-start" th:href="@{/politicas}">Políticas</a>
-                        <a class="btn btn-dark text-start" th:href="@{/usuarios}">Personal del banco</a>
+                        <a th:if="${session.rolActual == 'Administrador'}" class="btn btn-dark text-start" th:href="@{/tipos-credito}">Tipos de crédito</a>
+                        <a class="btn btn-dark text-start" th:if="${session.rolActual == 'Administrador'}" th:href="@{/usuarios}">Personal del banco</a>
                         <a class="btn btn-dark text-start" th:href="@{/reportes}">Reportes</a>
-                        <a class="btn btn-danger text-start mt-4" th:href="@{/login}">Cerrar sesión</a>
+                        <a class="btn btn-danger text-start mt-4" th:href="@{/logout}">Cerrar sesión</a>
                     </div>
                 </aside>
                 <main class="col-md-9 col-lg-10 p-4">
@@ -34,10 +36,9 @@
                         <div>
                             <p class="section-eyebrow mb-1">Panel operativo</p>
                             <h2 class="mb-1">Dashboard</h2>
-                            <p class="text-muted mb-0">Resumen de clientes y solicitudes guardados en PostgreSQL.</p>
+                            <p class="text-muted mb-0">Vista general de clientes, solicitudes y resultados.</p>
                         </div>
                     </div>
-                    <div class="alert alert-info" role="status">Resumen conectado al modelo MVC y a PostgreSQL mediante Spring Data JPA.</div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6 col-lg-3">
                             <div class="card shadow-sm">
@@ -66,7 +67,7 @@
                         <div class="col-md-6 col-lg-3">
                             <div class="card shadow-sm">
                                 <div class="card-body">
-                                    <h6 class="text-muted">Pendientes / en proceso</h6>
+                                    <h6 class="text-muted">Revisión manual</h6>
                                     <h2 th:text="${pendientesTotal}">0</h2>
                                 </div>
                             </div>
@@ -117,5 +118,6 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js">
         </script>
+            <script th:src="@{/js/json-forms.js(v=2)}" defer></script>
     </body>
 </html>

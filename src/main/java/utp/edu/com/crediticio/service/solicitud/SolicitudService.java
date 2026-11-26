@@ -4,7 +4,8 @@ import utp.edu.com.crediticio.model.solicitud.Solicitud;
 import utp.edu.com.crediticio.model.cliente.Cliente;
 import utp.edu.com.crediticio.repository.solicitud.SolicitudRepository;
 import utp.edu.com.crediticio.repository.cliente.ClienteRepository;
-import utp.edu.com.crediticio.repository.evaluacion.EvaluacionRepository;
+import utp.edu.com.crediticio.service.evaluacion.EvaluacionAutomaticaService;
+import utp.edu.com.crediticio.service.politica.TipoCreditoService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,23 +17,31 @@ import org.springframework.transaction.annotation.Transactional;
 public class SolicitudService {
     private final SolicitudRepository solicitudRepository;
     private final ClienteRepository clienteRepository;
-    private final EvaluacionRepository evaluacionRepository;
+    private final EvaluacionAutomaticaService evaluacionAutomaticaService;
+    private final TipoCreditoService tipos;
 
     public SolicitudService(SolicitudRepository solicitudRepository, ClienteRepository clienteRepository,
-            EvaluacionRepository evaluacionRepository) {
+            EvaluacionAutomaticaService evaluacionAutomaticaService, TipoCreditoService tipos) {
         this.solicitudRepository = solicitudRepository;
         this.clienteRepository = clienteRepository;
-        this.evaluacionRepository = evaluacionRepository;
+        this.evaluacionAutomaticaService = evaluacionAutomaticaService;
+        this.tipos=tipos;
     }
 
     public List<Solicitud> listar() { return solicitudRepository.findAll(); }
     public List<Solicitud> listarConCliente() { return solicitudRepository.findByClienteIsNotNull(); }
-    public List<Solicitud> listarPorCliente(Long idCliente) { return solicitudRepository.findByCliente_IdCliente(idCliente); }
+    public List<Solicitud> listarPorCliente(Long idCliente) {
+        return solicitudRepository.findByCliente_IdCliente(idCliente).stream()
+                .sorted(java.util.Comparator.comparing(Solicitud::getIdSolicitud).reversed()).toList();
+    }
     public Solicitud buscar(Long id) { return solicitudRepository.findById(id).orElse(null); }
 
+    @Transactional
     public Solicitud guardar(Solicitud solicitud) {
+        boolean nueva = solicitud.getIdSolicitud() == null;
+        Solicitud existente = nueva ? null : solicitudRepository.findById(solicitud.getIdSolicitud()).orElse(null);
+        if (!nueva && existente == null) throw new IllegalArgumentException("No se encontró la solicitud para actualizar.");
         if (solicitud.getIdSolicitud() != null && (solicitud.getCodigo() == null || solicitud.getCodigo().isBlank())) {
-            Solicitud existente = buscar(solicitud.getIdSolicitud());
             if (existente != null) solicitud.setCodigo(existente.getCodigo());
         }
         if (solicitud.getIdCliente() == null || solicitud.getIdCliente() <= 0) {
@@ -41,35 +50,34 @@ public class SolicitudService {
         Cliente cliente = clienteRepository.findById(solicitud.getIdCliente())
                 .orElseThrow(() -> new IllegalArgumentException("El cliente seleccionado no existe."));
         solicitud.setCliente(cliente);
-        if (solicitud.getCodigo() == null || solicitud.getCodigo().isBlank()) {
-            solicitud.setCodigo("SOL-%03d".formatted(solicitudRepository.count() + 1));
+        if (nueva && (cliente.getPasswordHash() == null || cliente.getPasswordHash().isBlank()
+                || !"Activo".equalsIgnoreCase(cliente.getEstado()))) {
+            throw new IllegalArgumentException("El cliente debe registrarse y activar su cuenta antes de solicitar crédito.");
         }
+        if (nueva) tipos.exigirDisponible(solicitud.getTipoCredito());
+        if (nueva) {
+            // No se aceptan ingresos/deudas/gastos suministrados en la petición JSON
+            // para alterar el resultado automático. La API externa prevalece en el evaluador.
+            solicitud.setIngresosMensuales(cliente.getIngresosMensuales());
+            solicitud.setDeudasMensuales(cliente.getDeudasMensuales());
+            solicitud.setGastosMensuales(cliente.getGastosMensuales());
+        } else {
+            if (solicitud.getIngresosMensuales() == null) solicitud.setIngresosMensuales(cliente.getIngresosMensuales());
+            if (solicitud.getGastosMensuales() == null) solicitud.setGastosMensuales(cliente.getGastosMensuales());
+            if (solicitud.getDeudasMensuales() == null) solicitud.setDeudasMensuales(cliente.getDeudasMensuales());
+        }
+        // El código de cada nueva solicitud se asigna desde su ID real después del INSERT.
+        // count()+1 podía duplicarse al borrar solicitudes existentes.
         if (solicitud.getFecha() == null || solicitud.getFecha().isBlank()) {
             solicitud.setFecha(LocalDate.now().toString());
         }
-        if (solicitud.getEstado() == null || solicitud.getEstado().isBlank()) solicitud.setEstado("Pendiente");
-        return solicitudRepository.save(solicitud);
-    }
-
-    @Transactional
-    public Solicitud actualizarEstado(Long id, String estado) {
-        Solicitud solicitud = solicitudRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró la solicitud."));
-        if (!List.of("Pendiente", "En evaluación", "Revisión manual", "Aprobada", "Rechazada")
-                .contains(estado)) {
-            throw new IllegalArgumentException("El estado indicado no es válido.");
-        }
-        solicitud.setEstado(estado);
-        // Fuerza el UPDATE dentro de la transacción para detectar errores de BD aquí.
+        solicitud.setEstado(nueva ? "Pendiente" : existente.getEstado());
         Solicitud guardada = solicitudRepository.saveAndFlush(solicitud);
-        evaluacionRepository.findFirstBySolicitud_IdSolicitud(id).ifPresent(evaluacion -> {
-            evaluacion.setResultado(switch (estado) {
-                case "Aprobada" -> "Aprobado";
-                case "Rechazada" -> "Rechazado";
-                default -> estado;
-            });
-            evaluacionRepository.saveAndFlush(evaluacion);
-        });
+        if (nueva) {
+            guardada.setCodigo("SOL-%06d".formatted(guardada.getIdSolicitud()));
+            guardada = solicitudRepository.saveAndFlush(guardada);
+            evaluacionAutomaticaService.evaluarNuevaSolicitud(guardada);
+        }
         return guardada;
     }
 

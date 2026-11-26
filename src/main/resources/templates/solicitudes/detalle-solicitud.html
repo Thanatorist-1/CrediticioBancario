@@ -19,8 +19,10 @@
                         <a class="btn btn-dark text-start" th:href="@{/clientes}">Clientes</a>
                         <a class="btn btn-primary text-start" th:href="@{/solicitudes}">Solicitudes</a>
                         <a class="btn btn-dark text-start" th:href="@{/evaluaciones}">Evaluaciones</a>
+                        <a class="btn btn-dark text-start" th:href="@{/consultas-simuladas}">Consulta simulada</a>
                         <a class="btn btn-dark text-start" th:href="@{/politicas}">Políticas</a>
-                        <a class="btn btn-dark text-start" th:href="@{/usuarios}">Personal del banco</a>
+                        <a th:if="${session.rolActual == 'Administrador'}" class="btn btn-dark text-start" th:href="@{/tipos-credito}">Tipos de crédito</a>
+                        <a class="btn btn-dark text-start" th:if="${session.rolActual == 'Administrador'}" th:href="@{/usuarios}">Personal del banco</a>
                         <a class="btn btn-dark text-start" th:href="@{/reportes}">Reportes</a></div>
                 </aside>
                 <main class="col-md-9 col-lg-10 p-4">
@@ -83,7 +85,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3"><strong>Estado</strong>
-                                    <div><span class="badge text-bg-secondary" th:text="${solicitud.estado ?: 'Pendiente'}"></span></div>
+                                    <div><span class="badge text-bg-secondary" th:text="${solicitud.estado ?: 'Revisión manual'}"></span></div>
                                 </div>
                                 <div class="col-md-9"><strong>Motivo</strong>
                                     <div th:text="${solicitud.motivo ?: '—'}">
@@ -115,21 +117,53 @@
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2 mb-4">
-                        <a class="btn btn-outline-secondary" th:href="@{/solicitudes/editar/{id}(id=${solicitud.idSolicitud})}">Editar solicitud</a>
-                        <a class="btn btn-outline-primary" th:href="@{/evaluaciones/nueva}">Registrar evaluación</a>
-                        <form method="post" th:action="@{/solicitudes/{id}/estado(id=${solicitud.idSolicitud})}">
-                            <input type="hidden" name="estado" value="Aprobada"/>
-                            <button class="btn btn-success">Aprobar</button></form>
-                        <form method="post" th:action="@{/solicitudes/{id}/estado(id=${solicitud.idSolicitud})}">
-                            <input type="hidden" name="estado" value="Rechazada"/>
-                            <button class="btn btn-danger">Rechazar</button></form>
-                        <form method="post" th:action="@{/solicitudes/{id}/estado(id=${solicitud.idSolicitud})}">
-                            <input type="hidden" name="estado" value="Revisión manual"/>
-                            <button class="btn btn-warning">Revisión manual</button></form>
+
+                    <div class="card shadow-sm mb-3" th:if="${perfilExterno != null}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center"><h5 class="mb-0">Información de la API externa (consulta actual)</h5><span class="badge text-bg-info">DATOS SIMULADOS</span></div>
+                            <p class="text-muted small mt-2">Estos valores se consultan al abrir el detalle. La decisión automática se basa en la información capturada cuando se creó la solicitud.</p>
+                            <div class="row g-3">
+                                <div class="col-md-4"><strong>Nombre y apellidos</strong><div th:text="${perfilExterno.nombreCompleto}"></div></div>
+                                <div class="col-md-4"><strong>Estado del perfil</strong><div th:text="${perfilExterno.personaActiva ? 'Activo' : 'Inactivo'}"></div></div>
+                                <div class="col-md-4"><strong>Identidad</strong><div th:text="${perfilExterno.identidadVerificada ? 'Verificada' : 'No verificada'}"></div></div>
+                                <div class="col-md-4"><strong>¿Trabaja actualmente?</strong><div th:text="${perfilExterno.trabajaActualmente ? 'Sí' : 'No'}"></div></div>
+                                <div class="col-md-4"><strong>Puntaje crediticio</strong><div th:text="${perfilExterno.scoreCrediticio + ' / 850'}"></div></div>
+                                <div class="col-md-4"><strong>Riesgo</strong><div th:text="${perfilExterno.clasificacionRiesgo}"></div></div>
+                                <div class="col-md-4"><strong>Ingresos</strong><div th:text="${'S/ ' + perfilExterno.ingresosMensuales}"></div></div>
+                                <div class="col-md-4"><strong>Deuda mensual</strong><div th:text="${'S/ ' + perfilExterno.deudaMensual}"></div></div>
+                                <div class="col-md-4"><strong>Saldo total pendiente</strong><div th:text="${'S/ ' + perfilExterno.saldoDeudaPendiente}"></div></div>
+                                <div class="col-md-4"><strong>Cuotas atrasadas</strong><div th:text="${perfilExterno.cuotasAtrasadas}"></div></div>
+                                <div class="col-md-4"><strong>Historial negativo</strong><div th:text="${perfilExterno.historialNegativo ? 'Sí' : 'No'}"></div></div>
+                                <div class="col-md-4"><strong>Nacimiento</strong><div th:text="${perfilExterno.fechaNacimiento}"></div></div>
+                            </div>
+                        </div>
                     </div>
+                    <div class="alert alert-warning" th:if="${avisoExterno}" th:text="${avisoExterno}"></div>
+                    <div class="card shadow-sm mb-4"><div class="card-body">
+                        <h5>Resultado automático</h5>
+                        <p><strong>Estado:</strong> <span th:text="${solicitud.estado}">Revisión manual</span></p>
+                        <div th:if="${evaluacion != null}" class="mb-2">
+                            <strong>Datos usados en la decisión:</strong>
+                            Score <span th:text="${evaluacion.puntaje}"></span> / 850 ·
+                            DTI <span th:text="${evaluacion.dti != null ? evaluacion.dti + '%' : 'No disponible'}"></span> ·
+                            Trabaja <span th:text="${evaluacion.trabajaActualmente == null ? 'No consultado' : (evaluacion.trabajaActualmente ? 'Sí' : 'No')}"></span> ·
+                            Atrasos <span th:text="${evaluacion.cuotasAtrasadas}"></span> ·
+                            Historial negativo <span th:text="${evaluacion.historialNegativo == null ? '—' : (evaluacion.historialNegativo ? 'Sí' : 'No')}"></span>
+                        </div>
+                        <p class="mb-2"><strong>Explicación detallada de la decisión:</strong> <span th:text="${explicacion}">Motivo</span></p>
+                        <a class="btn btn-outline-primary" th:if="${solicitud.estado == 'Revisión manual' and evaluacion != null}" th:href="@{/evaluaciones/detalle(id=${evaluacion.idEvaluacion})}">Abrir evaluación manual</a>
+                    </div></div>
+                    <div class="card shadow-sm mb-4"><div class="card-body">
+                      <h5>Documentos del cliente</h5>
+                      <ul th:if="${documentos != null and !#lists.isEmpty(documentos)}"><li th:each="doc : ${documentos}">
+                        <a th:href="@{/api/v1/solicitudes/{sid}/documentos/{did}/descargar(sid=${solicitud.idSolicitud},did=${doc.id})}" th:text="${doc.nombreArchivo}">Documento</a>
+                        <span class="text-muted small" th:text="${doc.etapa == 'REVISION' ? ' — Para revisión manual' : ' — Adjunto inicial'}"></span>
+                      </li></ul>
+                      <p class="text-muted mb-0" th:if="${documentos == null or #lists.isEmpty(documentos)}">Aún no hay documentos adjuntos.</p>
+                    </div></div>
                 </main>
             </div>
         </div>
+            <script th:src="@{/js/json-forms.js(v=2)}" defer></script>
     </body>
 </html>

@@ -30,6 +30,11 @@ public class ReporteService {
 
     @Transactional(readOnly = true)
     public ReporteResumen generar(String fechaInicioTexto, String fechaFinTexto) {
+        return generar(fechaInicioTexto, fechaFinTexto, null);
+    }
+
+    @Transactional(readOnly = true)
+    public ReporteResumen generar(String fechaInicioTexto, String fechaFinTexto, String persona) {
         LocalDate fechaInicio = parsearFecha(fechaInicioTexto);
         LocalDate fechaFin = parsearFecha(fechaFinTexto);
         if (fechaInicio != null && fechaFin != null && fechaInicio.isAfter(fechaFin)) {
@@ -38,6 +43,7 @@ public class ReporteService {
 
         List<Solicitud> solicitudes = consultarSolicitudes(fechaInicio, fechaFin).stream()
                 .filter(solicitud -> dentroDelPeriodo(solicitud, fechaInicio, fechaFin))
+                .filter(solicitud -> coincidePersona(solicitud, persona))
                 .sorted((a, b) -> compararFechas(b.getFecha(), a.getFecha()))
                 .toList();
 
@@ -65,6 +71,15 @@ public class ReporteService {
 
         return new ReporteResumen(solicitudes, mensual, total, aprobadas, rechazadas,
                 pendientes, monto, porcentaje(aprobadas, total), porcentaje(rechazadas, total));
+    }
+
+    private static boolean coincidePersona(Solicitud solicitud, String persona) {
+        if (persona == null || persona.isBlank()) return true;
+        if (solicitud.getCliente() == null) return false;
+        String filtro=persona.trim().toLowerCase();
+        String nombre=String.valueOf(solicitud.getCliente().getNombre()).toLowerCase();
+        String dni=String.valueOf(solicitud.getCliente().getDni()).toLowerCase();
+        return nombre.contains(filtro) || dni.contains(filtro);
     }
 
     private List<Solicitud> consultarSolicitudes(LocalDate fechaInicio, LocalDate fechaFin) {

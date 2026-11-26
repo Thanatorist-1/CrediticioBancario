@@ -20,16 +20,25 @@ public class ClienteService {
     public Cliente buscarPorDni(String dni) { return clienteRepository.findFirstByDni(dni).orElse(null); }
 
     public Cliente guardar(Cliente cliente) {
+        if (cliente.getIdCliente() == null)
+            throw new IllegalArgumentException("Los clientes solo pueden crear su cuenta desde Registro, validando el DNI con la API simulada.");
+        Cliente cuenta = buscar(cliente.getIdCliente());
+        if (cuenta == null || cuenta.getPasswordHash() == null || cuenta.getPasswordHash().isBlank())
+            throw new IllegalArgumentException("La cuenta del cliente no existe o no fue registrada.");
+        // DNI, identidad y datos financieros externos no se modifican desde administración.
+        cliente.setDni(cuenta.getDni());
+        cliente.setNombre(cuenta.getNombre());
+        cliente.setFechaNacimiento(cuenta.getFechaNacimiento());
+        cliente.setTrabajaActualmente(cuenta.getTrabajaActualmente());
+        cliente.setIngresosMensuales(cuenta.getIngresosMensuales());
+        cliente.setDeudasMensuales(cuenta.getDeudasMensuales());
+        if (cliente.getEstado() == null || cliente.getEstado().isBlank()) cliente.setEstado("Activo");
         Cliente clienteConDni = buscarPorDni(cliente.getDni());
         if (clienteConDni != null && !clienteConDni.getIdCliente().equals(cliente.getIdCliente())) {
             throw new IllegalArgumentException("Ya existe un cliente con ese DNI.");
         }
-        if (cliente.getIdCliente() == null && (cliente.getCodigo() == null || cliente.getCodigo().isBlank())) {
-            cliente.setCodigo("CL-%03d".formatted(clienteRepository.count() + 1));
-        } else if (cliente.getIdCliente() != null && (cliente.getCodigo() == null || cliente.getCodigo().isBlank())) {
-            Cliente existente = buscar(cliente.getIdCliente());
-            if (existente != null) cliente.setCodigo(existente.getCodigo());
-        }
+        cliente.setCodigo(cuenta.getCodigo());
+        cliente.setPasswordHash(cuenta.getPasswordHash());
         return clienteRepository.save(cliente);
     }
 

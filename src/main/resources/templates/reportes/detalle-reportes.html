@@ -19,19 +19,29 @@
                         <a class="btn btn-dark text-start" th:href="@{/clientes}">Clientes</a>
                         <a class="btn btn-dark text-start" th:href="@{/solicitudes}">Solicitudes</a>
                         <a class="btn btn-dark text-start" th:href="@{/evaluaciones}">Evaluaciones</a>
+                        <a class="btn btn-dark text-start" th:href="@{/consultas-simuladas}">Consulta simulada</a>
                         <a class="btn btn-dark text-start" th:href="@{/politicas}">Políticas</a>
-                        <a class="btn btn-dark text-start" th:href="@{/usuarios}">Personal del banco</a>
+                        <a th:if="${session.rolActual == 'Administrador'}" class="btn btn-dark text-start" th:href="@{/tipos-credito}">Tipos de crédito</a>
+                        <a class="btn btn-dark text-start" th:if="${session.rolActual == 'Administrador'}" th:href="@{/usuarios}">Personal del banco</a>
                         <a class="btn btn-primary text-start" th:href="@{/reportes}">Reportes</a>
-                        <a class="btn btn-danger text-start mt-4" th:href="@{/login}">Cerrar sesión</a></div>
+                        <a class="btn btn-danger text-start mt-4" th:href="@{/logout}">Cerrar sesión</a></div>
                 </aside>
                 <main class="col-md-9 col-lg-10 p-4">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
                         <div>
-                            <p class="text-uppercase small text-muted mb-1">PostgreSQL</p>
+                            <p class="text-uppercase small text-muted mb-1">Detalle</p>
                             <h2 class="mb-1">Solicitudes del reporte</h2>
                             <p class="text-muted mb-0">Registros encontrados: <strong th:text="${#lists.size(solicitudes)}">0</strong></p>
                         </div>
-                        <a class="btn btn-outline-secondary" th:href="@{/reportes(fechaInicio=${fechaInicio},fechaFin=${fechaFin})}">Volver al resumen</a></div>
+                        <div class="d-flex gap-2">
+                            <form method="get" th:action="@{/reportes/descargar}">
+                                <input type="hidden" name="fechaInicio" th:value="${fechaInicio}"/>
+                                <input type="hidden" name="fechaFin" th:value="${fechaFin}"/>
+                                <input type="hidden" name="persona" th:value="${persona}"/>
+                                <button class="btn btn-success" type="submit">Descargar Excel filtrado</button>
+                            </form>
+                            <a class="btn btn-outline-secondary" th:href="@{/reportes(fechaInicio=${fechaInicio},fechaFin=${fechaFin},persona=${persona})}">Volver al resumen</a>
+                        </div></div>
                     <div class="alert alert-danger" th:if="${error}" th:text="${error}">
                     </div>
                     <form method="get" th:action="@{/reportes/detalles}" class="card card-body shadow-sm mb-4">
@@ -42,6 +52,7 @@
                             <div class="col-sm-5"><label class="form-label" for="fechaFin">Hasta</label>
                                 <input class="form-control" id="fechaFin" name="fechaFin" type="date" th:value="${fechaFin}"/>
                             </div>
+                            <div class="col-sm-6"><label class="form-label" for="persona">Cliente (nombre o DNI)</label><input class="form-control" id="persona" name="persona" th:value="${persona}"/></div>
                             <div class="col-sm-2">
                                 <button class="btn btn-primary w-100">Filtrar</button></div>
                         </div>
@@ -57,22 +68,28 @@
                                         <th>Monto</th>
                                         <th>Fecha</th>
                                         <th>Estado</th>
+                                        <th>Ingreso / deuda</th>
+                                        <th>Motivo</th>
+                                        <th>Decisión / evaluación</th>
                                         <th>Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="solicitud : ${solicitudes}">
+                                    <tr th:each="solicitud : ${solicitudes}" th:with="evaluacion=${evaluacionesPorSolicitud[solicitud.idSolicitud]}">
                                         <td th:text="${solicitud.codigo}">SOL-001</td>
                                         <td th:text="${solicitud.cliente != null ? solicitud.cliente.nombre : 'Sin cliente'}">Cliente</td>
                                         <td th:text="${solicitud.tipoCredito ?: '—'}">Personal</td>
                                         <td th:text="${solicitud.monto != null ? 'S/ ' + #numbers.formatDecimal(solicitud.monto, 1, 2) : '—'}">S/ 0.00</td>
                                         <td th:text="${solicitud.fecha ?: '—'}">2026-10-01</td>
-                                        <td><span class="badge text-bg-secondary" th:text="${solicitud.estado ?: 'Pendiente'}">Pendiente</span></td>
+                                        <td><span class="badge text-bg-secondary" th:text="${solicitud.estado ?: 'Revisión manual'}">Revisión manual</span></td>
+                                        <td th:text="${solicitud.ingresosMensuales != null ? 'S/ ' + solicitud.ingresosMensuales + ' / S/ ' + solicitud.deudasMensuales : 'Sin datos financieros'}"></td>
+                                        <td th:text="${solicitud.motivo ?: '—'}"></td>
+                                        <td th:text="${evaluacion != null ? evaluacion.resultado + ' · ' + evaluacion.comentario : (solicitud.observaciones ?: 'Sin evaluación registrada')}"></td>
                                         <td>
                                             <a class="btn btn-sm btn-outline-primary" th:href="@{/solicitudes/detalle(id=${solicitud.idSolicitud})}">Ver solicitud</a></td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(solicitudes)}">
-                                        <td colspan="7" class="text-center text-muted py-5">No hay solicitudes en el periodo seleccionado.</td>
+                                        <td colspan="10" class="text-center text-muted py-5">No hay solicitudes en el periodo seleccionado.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -81,5 +98,6 @@
                 </main>
             </div>
         </div>
+            <script th:src="@{/js/json-forms.js(v=2)}" defer></script>
     </body>
 </html>
