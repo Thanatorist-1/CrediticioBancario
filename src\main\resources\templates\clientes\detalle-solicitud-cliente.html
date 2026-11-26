@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Detalle de mi solicitud — Sistema Crediticio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link th:href="@{/css/style.css}" rel="stylesheet"/>
+  <style>body{background:#f4f7fc}.explicacion{font-size:1.08rem;line-height:1.8;white-space:pre-wrap}.dato th{background:#f8faff;width:45%;color:#53657a}.tag{letter-spacing:.04em}</style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary"><div class="container"><a class="navbar-brand fw-bold" th:href="@{/portal-cliente}">Sistema Crediticio</a><a class="btn btn-light btn-sm" th:href="@{/logout}">Cerrar sesión</a></div></nav>
+<main class="container py-4" style="max-width:980px">
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+    <div><a class="text-decoration-none small" th:href="@{/portal-cliente}">← Volver a mi perfil</a>
+      <h1 class="h3 fw-bold mt-2">¿Por qué se tomó esta decisión?</h1>
+      <p class="text-muted mb-0" th:text="${solicitud.codigo + ' · ' + solicitud.tipoCredito + ' · S/ ' + solicitud.monto}">Solicitud</p></div>
+    <span class="badge fs-6" th:classappend="${solicitud.estado == 'Aprobada' ? 'text-bg-success' : (solicitud.estado == 'Rechazada' ? 'text-bg-danger' : 'text-bg-warning')}" th:text="${solicitud.estado}">Resultado</span>
+  </div>
+  <section class="card border-0 shadow-sm mb-4"><div class="card-body p-4">
+    <h2 class="h5 fw-bold mb-3" th:text="${solicitud.estado == 'Aprobada' ? 'Tu solicitud fue aprobada' : (solicitud.estado == 'Rechazada' ? 'Tu solicitud fue rechazada' : 'Tu solicitud necesita revisión manual')}">Decisión</h2>
+    <div class="explicacion" th:text="${explicacion}">Explicación basada en los indicadores financieros históricos.</div>
+    <p class="small text-muted mt-3 mb-0">Esta decisión se basa en los datos registrados cuando enviaste la solicitud. Se trata de una evaluación académica; la cuota estimada no incluye intereses ni seguros.</p>
+  </div></section>
+  <section class="card border-0 shadow-sm mb-4"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">Indicadores utilizados al evaluar</h2></div>
+    <div class="table-responsive"><table class="table dato table-bordered align-middle mb-0"><tbody>
+      <tr><th>Monto solicitado</th><td th:text="${'S/ ' + solicitud.monto}">—</td></tr>
+      <tr><th>Plazo de pago</th><td th:text="${solicitud.plazoMeses + ' meses'}">—</td></tr>
+      <tr><th>Cuota mensual estimada (capital)</th><td th:text="${solicitud.monto != null and solicitud.plazoMeses != null and solicitud.plazoMeses > 0 ? 'S/ ' + #numbers.formatDecimal(solicitud.monto / solicitud.plazoMeses, 1, 2) : 'Sin datos'}">—</td></tr>
+      <tr><th>Ingresos mensuales según la API</th><td th:text="${evaluacion != null and evaluacion.ingresosExternos != null ? 'S/ ' + evaluacion.ingresosExternos : 'No disponible'}">—</td></tr>
+      <tr><th>Gastos mensuales declarados</th><td th:text="${solicitud.gastosMensuales != null ? 'S/ ' + solicitud.gastosMensuales : 'No disponible'}">—</td></tr>
+      <tr><th>Deudas mensuales según la API</th><td th:text="${evaluacion != null and evaluacion.deudaExterna != null ? 'S/ ' + evaluacion.deudaExterna : 'No disponible'}">—</td></tr>
+      <tr><th>Ingreso disponible</th><td th:text="${evaluacion != null and evaluacion.ingresoDisponible != null ? 'S/ ' + evaluacion.ingresoDisponible : 'No calculado'}">—</td></tr>
+      <tr><th>Deudas más nueva cuota (DTI)</th><td th:text="${evaluacion != null and evaluacion.dti != null ? evaluacion.dti + '%' : 'No calculado'}">—</td></tr>
+      <tr><th>Pagos atrasados</th><td th:text="${evaluacion != null and evaluacion.cuotasAtrasadas != null ? evaluacion.cuotasAtrasadas : 'No disponible'}">—</td></tr>
+      <tr><th>Historial de pagos negativo</th><td th:text="${evaluacion != null and evaluacion.historialNegativo != null ? (evaluacion.historialNegativo ? 'Sí' : 'No') : 'No disponible'}">—</td></tr>
+      <tr><th>Actualmente trabaja</th><td th:text="${evaluacion != null and evaluacion.trabajaActualmente != null ? (evaluacion.trabajaActualmente ? 'Sí' : 'No') : 'No disponible'}">—</td></tr>
+      <tr><th>Puntaje crediticio (referencial)</th><td th:text="${evaluacion != null and evaluacion.puntaje != null ? evaluacion.puntaje + ' / 850' : 'No disponible'}">—</td></tr>
+      <tr><th>Fuente</th><td>Servicio Académico de Información Crediticia</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="card border-warning shadow-sm mb-4" th:if="${solicitud.estado == 'Revisión manual'}" id="documentacion-revision">
+    <div class="card-header bg-warning-subtle py-3"><h2 class="h5 fw-bold mb-0">Documentación necesaria para la revisión</h2></div>
+    <div class="card-body p-4">
+      <p class="mb-3">Tu solicitud necesita una comprobación adicional. <strong>Envía los documentos que acrediten tus ingresos, gastos esenciales y obligaciones pendientes.</strong> El analista los revisará para decidir si corresponde aprobar o rechazar tu solicitud.</p>
+      <div class="alert alert-info" role="status" th:if="${evaluacion != null and evaluacion.requerimientoDocumental != null and !#strings.isEmpty(evaluacion.requerimientoDocumental)}">
+        <strong>Solicitud específica del analista:</strong> <span th:text="${evaluacion.requerimientoDocumental}"></span>
+      </div>
+      <div class="alert alert-success" th:if="${documentosRevisionCount > 0}">
+        Recibimos <strong th:text="${documentosRevisionCount}">0</strong> documento(s) adicionales. Tu solicitud sigue en revisión hasta que un analista registre su decisión.
+      </div>
+      <p class="small mb-2 fw-semibold">Puedes adjuntar, según corresponda a tu caso:</p>
+      <ul><li>Boletas de pago de sueldo o constancias de ingresos de los últimos meses.</li>
+          <li>Recibos recientes de luz, agua, gas, internet u otros servicios de primera necesidad.</li>
+          <li>Contrato o comprobantes de alquiler, o recibos de renta si percibes esos ingresos.</li>
+          <li>Estados de cuenta, comprobantes de pago de cuotas atrasadas u otras obligaciones.</li></ul>
+      <p class="small text-muted">No todos los documentos son obligatorios para todos los casos. Si tienes dudas, consulta el requerimiento del analista. Adjuntar archivos no cambia por sí solo el resultado.</p>
+      <form id="form-documentos-revision" th:attr="data-id-solicitud=${solicitud.idSolicitud}">
+        <div class="alert alert-danger d-none" id="error-documentos-revision" role="alert"></div>
+        <div class="mb-3"><label for="categoriaRevision" class="form-label fw-semibold">Tipo de documentación</label>
+          <select id="categoriaRevision" class="form-select" required>
+            <option value="">Selecciona el tipo de documento</option>
+            <option value="BOLETA_SUELDO">Boletas de sueldo / sustento de ingresos</option>
+            <option value="RECIBO_SERVICIOS">Recibos de servicios básicos</option>
+            <option value="RENTA">Alquiler o renta</option>
+            <option value="ESTADO_CUENTA">Estado de cuenta / comprobantes de deudas</option>
+            <option value="OTRO">Otro sustento solicitado</option>
+          </select></div>
+        <div class="mb-3"><label for="archivosRevision" class="form-label fw-semibold">Selecciona los archivos</label>
+          <input id="archivosRevision" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" multiple required/>
+          <div class="form-text">PDF, JPG o PNG. Máximo 5 MB por archivo y 20 MB/20 documentos acumulados por solicitud. Puedes enviar nuevos documentos en varias ocasiones.</div></div>
+        <button type="submit" id="boton-documentos-revision" class="btn btn-primary">Enviar documentos para revisión</button>
+      </form>
+      <hr class="my-4"/><h3 class="h6 fw-bold">Documentos que ya enviaste</h3>
+      <ul class="list-group" th:if="${!#lists.isEmpty(documentos)}">
+        <li class="list-group-item d-flex flex-wrap justify-content-between gap-2" th:each="doc : ${documentos}">
+          <span><strong th:text="${doc.nombreArchivo}">Archivo</strong>
+            <span class="badge text-bg-secondary ms-2" th:text="${doc.etapa == 'REVISION' ? 'Para revisión' : 'Adjunto inicial'}">Tipo</span>
+            <small class="text-muted" th:text="${doc.fechaSubida}">Fecha</small></span>
+          <a class="btn btn-sm btn-outline-primary" th:href="@{/api/v1/solicitudes/{sid}/documentos/{did}/descargar(sid=${solicitud.idSolicitud},did=${doc.id})}">Descargar</a></li>
+      </ul>
+      <p class="text-muted small" th:if="${#lists.isEmpty(documentos)}">Todavía no has adjuntado documentos.</p>
+    </div>
+  </section>
+  <div class="card border-0 shadow-sm mb-4" th:unless="${solicitud.estado == 'Revisión manual'}"><div class="card-body"><h2 class="h6 fw-semibold">Documentos adjuntos anteriormente</h2>
+    <ul th:if="${!#lists.isEmpty(documentos)}"><li th:each="doc : ${documentos}"><a th:href="@{/api/v1/solicitudes/{sid}/documentos/{did}/descargar(sid=${solicitud.idSolicitud},did=${doc.id})}" th:text="${doc.nombreArchivo}">Archivo</a></li></ul>
+    <p class="small text-muted mb-0" th:if="${#lists.isEmpty(documentos)}">Sin documentos adjuntos.</p>
+  </div></div>
+</main>
+<script th:src="@{/js/revision-documentos.js(v=1)}" defer></script>
+</body></html>

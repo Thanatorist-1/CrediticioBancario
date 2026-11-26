@@ -13,7 +13,7 @@
     
     <groupId>utp.edu.com</groupId>
     <artifactId>CrediticioBancario</artifactId>
-    <version>1.23.0</version>
+    <version>1.29.0</version>
     <packaging>jar</packaging>
     
     <properties>
@@ -49,11 +49,16 @@
                 <artifactId>postgresql</artifactId>
                 <version>42.7.13</version>
         </dependency>
-        <!-- Generacion de archivos PDF para el modulo de reportes. -->
         <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>3.0.8</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Exportación de reportes en formato Excel (.xlsx). -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.4.1</version>
         </dependency>
     </dependencies>    
          
@@ -66,3 +71,8 @@
         </plugins>
     </build>
 </project>
+
+
+
+
+

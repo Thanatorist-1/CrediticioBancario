@@ -1,0 +1,28 @@
+.pagina-reportes { background:#f4f7fb; }
+.pagina-reportes .card { border-radius: 16px; }
+.eyebrow { color:#5677a3; text-transform:uppercase; letter-spacing:.13em; font-size:.72rem; font-weight:750; margin-bottom:6px; }
+.kpi-card { padding:22px; border:1px solid #e4ebf2; border-radius:16px; background:white; display:flex; flex-direction:column; min-height:148px; box-shadow:0 4px 18px #182d4810; }
+.kpi-label { font-size:.82rem; color:#56677e; font-weight:600; }
+.kpi-number { margin-top:12px; font-size:2.1rem; font-weight:800; color:#192c43; line-height:1.1; letter-spacing:-.04em; }
+.kpi-currency { font-size:1.65rem; letter-spacing:-.05em; }
+.kpi-success { color:#168258; }.kpi-danger { color:#c54b55; }.kpi-warning {color:#bc8123;}
+.kpi-card small { color:#7a8797; margin-top:auto; padding-top:10px; }
+.donut-analitica { width:194px; height:194px; border-radius:50%; flex:none; display:grid; place-items:center; box-shadow:0 10px 30px #182d4810; }
+.donut-centro { width:128px; height:128px; border-radius:50%; background:white; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.donut-centro strong { font-size:2.15rem; font-weight:800; color:#21374e; line-height:1.05; }
+.donut-centro span { font-size:.78rem; color:#78869a; }
+.leyenda { display:inline-block; width:12px; height:12px; margin-right:7px; vertical-align:-1px; border-radius:3px; }
+.leyenda.verde,.segmento.aprobado { background:#19865b; }
+.leyenda.rojo,.segmento.rechazado { background:#da5664; }
+.leyenda.ambar,.segmento.revision { background:#e3a63f; }
+.leyenda.gris,.segmento.pendiente { background:#9ca8b9; }
+.grafico-lista { display:grid; gap:15px; }
+.grafico-renglon { display:grid; gap:7px; }
+.barra-base { height:21px; border-radius:6px; background:#eff2f7; overflow:hidden; }
+.barra-total { height:100%; display:flex; min-width:0; overflow:hidden; border-radius:6px; }
+.segmento { display:block; height:100%; flex-shrink:0; }
+.alerta-metrica { background:#f5f8fc; border:1px solid #e2e9f0; padding:18px 16px; border-radius:12px; display:flex; flex-direction:column; height:100%; }
+.alerta-metrica span { color:#576b84; font-size:.84rem; font-weight:600; }
+.alerta-metrica strong { margin:10px 0 6px; font-size:2rem; color:#243c59; }
+.alerta-metrica small { color:#687c91; }
+@media (max-width: 900px) { .kpi-card { min-height:130px; }.donut-analitica {width:170px;height:170px;} .donut-centro {width:114px;height:114px;} }
