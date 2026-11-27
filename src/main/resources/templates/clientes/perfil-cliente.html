@@ -19,12 +19,10 @@
                         <a class="btn btn-primary text-start" th:href="@{/clientes}">Clientes</a>
                         <a class="btn btn-dark text-start" th:href="@{/solicitudes}">Solicitudes</a>
                         <a class="btn btn-dark text-start" th:href="@{/evaluaciones}">Evaluaciones</a>
-                        <a class="btn btn-dark text-start" th:href="@{/consultas-simuladas}">Consulta simulada</a>
                         <a class="btn btn-dark text-start" th:href="@{/politicas}">Políticas</a>
-                        <a th:if="${session.rolActual == 'Administrador'}" class="btn btn-dark text-start" th:href="@{/tipos-credito}">Tipos de crédito</a>
-                        <a class="btn btn-dark text-start" th:if="${session.rolActual == 'Administrador'}" th:href="@{/usuarios}">Personal del banco</a>
+                        <a class="btn btn-dark text-start" th:href="@{/usuarios}">Personal del banco</a>
                         <a class="btn btn-dark text-start" th:href="@{/reportes}">Reportes</a>
-                        <a class="btn btn-danger text-start mt-4" th:href="@{/logout}">Cerrar sesión</a></div>
+                        <a class="btn btn-danger text-start mt-4" th:href="@{/login}">Cerrar sesión</a></div>
                 </aside>
                 <main class="col-md-9 col-lg-10 p-4">
                     <div class="d-flex justify-content-between">
@@ -57,7 +55,6 @@
                                     <div th:text="${cliente.estado}">
                                     </div>
                                 </div>
-                                <div class="col-md-4"><strong>Trabaja actualmente</strong><div th:text="${cliente.trabajaActualmente == null ? 'No consultado' : (cliente.trabajaActualmente ? 'Sí' : 'No')}"></div></div>
                                 <div class="col-md-4"><strong>Empresa</strong>
                                     <div th:text="${cliente.empresa}">
                                     </div>
@@ -85,6 +82,43 @@
                             </div>
                         </div>
                     </div>
+                    <section class="card shadow-sm my-4" th:if="${perfilFicticio.consultaAplicable()}">
+                        <div class="card-body">
+                            <h5>Perfil ficticio académico</h5>
+                            <p class="text-muted">Datos simulados; no RENIEC ni SBS.</p>
+                            <div th:if="${perfilFicticio.perfil() != null}" class="row g-3">
+                                <div class="col-md-4"><strong>Entorno</strong>
+                                    <div th:text="${perfilFicticio.perfil().entorno()}">SIMULADO</div>
+                                </div>
+                                <div class="col-md-4"><strong>Identidad simulada</strong>
+                                    <div th:text="${perfilFicticio.perfil().identidad()}">Perfil ficticio</div>
+                                </div>
+                                <div class="col-md-4"><strong>Persona activa</strong>
+                                    <div th:text="${perfilFicticio.perfil().personaActiva()}">true</div>
+                                </div>
+                                <div class="col-md-3"><strong>Score</strong>
+                                    <div th:text="${perfilFicticio.perfil().score()}">0</div>
+                                </div>
+                                <div class="col-md-3"><strong>Riesgo</strong>
+                                    <div th:text="${perfilFicticio.perfil().riesgo()}">N/D</div>
+                                </div>
+                                <div class="col-md-3"><strong>Ingresos</strong>
+                                    <div th:text="${perfilFicticio.perfil().ingresos()}">0</div>
+                                </div>
+                                <div class="col-md-3"><strong>Deuda</strong>
+                                    <div th:text="${perfilFicticio.perfil().deuda()}">0</div>
+                                </div>
+                                <div class="col-md-6"><strong>Cuotas atrasadas</strong>
+                                    <div th:text="${perfilFicticio.perfil().cuotasAtrasadas()}">0</div>
+                                </div>
+                                <div class="col-md-6"><strong>Historial negativo</strong>
+                                    <div th:text="${perfilFicticio.perfil().historialNegativo()}">false</div>
+                                </div>
+                            </div>
+                            <div th:if="${perfilFicticio.perfil() == null}" class="alert alert-warning mb-0"
+                                 th:text="${perfilFicticio.mensaje()}">No se pudo consultar el perfil ficticio.</div>
+                        </div>
+                    </section>
                     <div class="card shadow-sm">
                         <div class="card-body">
                             <h5>Solicitudes del cliente</h5>
@@ -122,6 +156,5 @@
                 </main>
             </div>
         </div>
-            <script th:src="@{/js/json-forms.js(v=2)}" defer></script>
     </body>
 </html>
