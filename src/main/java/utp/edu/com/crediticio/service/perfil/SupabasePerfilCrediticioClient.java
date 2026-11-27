@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,6 +24,7 @@ public class SupabasePerfilCrediticioClient {
     private final RestClient restClient;
     private final String serviceRoleKey;
 
+    @Autowired
     public SupabasePerfilCrediticioClient(RestClient.Builder restClientBuilder,
             @Value("${supabase.url}") String supabaseUrl,
             @Value("${supabase.service-role-key}") String serviceRoleKey) {
