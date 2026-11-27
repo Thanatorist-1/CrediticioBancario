@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -19,15 +20,28 @@ class ServicioDatosClientTest {
     @BeforeAll
     static void iniciarServidor() throws IOException {
         server = HttpServer.create(new InetSocketAddress(0), 0);
-        server.createContext("/api/v1/consultas/90000001", exchange -> responder(exchange,
-                200, """
-                {"entorno":"SIMULADO","identidad":"Persona ficticia","personaActiva":true,
-                 "score":720,"riesgo":"BAJO","ingresos":3500.50,"deuda":700.00,
-                 "cuotasAtrasadas":0,"historialNegativo":false}
-                """));
+        server.createContext("/rest/v1/rpc/obtener_perfil_crediticio", exchange -> {
+            if (!"POST".equals(exchange.getRequestMethod())
+                    || !"clave-prueba".equals(exchange.getRequestHeaders().getFirst("apikey"))
+                    || !"Bearer clave-prueba".equals(exchange.getRequestHeaders().getFirst("Authorization"))) {
+                responder(exchange, 401, "[]");
+                return;
+            }
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            responder(exchange, body.contains("90000001") ? 200 : 200, body.contains("90000001") ? """
+                [{"entorno":"SIMULADO","fuente":"Supabase","dni":"90000001",
+                  "nombre_completo":"Persona ficticia","nombres":"Persona","apellidos":"Ficticia",
+                  "fecha_nacimiento":"1990-01-01","identidad_verificada":true,"persona_activa":true,
+                  "trabaja_actualmente":true,"score_crediticio":720,"clasificacion_riesgo":"Bajo",
+                  "ingresos_mensuales":3500.50,"deuda_mensual":700.00,"saldo_deuda_pendiente":8400.00,
+                  "cuotas_atrasadas":0,"historial_negativo":false,"advertencia":"Simulado"}]
+                """ : "[]");
+        });
         server.start();
-        client = new ServicioDatosClient(RestClient.builder(),
-                "http://localhost:" + server.getAddress().getPort());
+        var perfiles = new SupabasePerfilCrediticioClient(RestClient.builder(),
+                "http://localhost:" + server.getAddress().getPort(), "clave-prueba",
+                new SimpleClientHttpRequestFactory());
+        client = new ServicioDatosClient(perfiles);
     }
 
     @AfterAll

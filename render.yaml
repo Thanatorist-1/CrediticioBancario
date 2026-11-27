@@ -2,7 +2,9 @@ services:
   - type: web
     name: crediticio-bancario
     runtime: docker
+    region: oregon
     plan: free
+    branch: main
     autoDeployTrigger: commit
     healthCheckPath: /login
     envVars:
@@ -12,5 +14,7 @@ services:
         sync: false
       - key: SPRING_DATASOURCE_PASSWORD
         sync: false
-      - key: SERVICIO_DATOS_URL
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
