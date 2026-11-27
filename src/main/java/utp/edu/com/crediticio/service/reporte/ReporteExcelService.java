@@ -3,7 +3,13 @@ package utp.edu.com.crediticio.service.reporte;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +59,7 @@ public class ReporteExcelService {
             }
             for(int i=0;i<titulos.length;i++) detalle.autoSizeColumn(i);
             detalle.createFreezePane(0,1);
-            if (n > 1) detalle.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0,n-1,0,titulos.length-1));
+            if (n > 1) detalle.setAutoFilter(new CellRangeAddress(0,n-1,0,titulos.length-1));
             // Datos analíticos en una hoja de Excel adicional (mismos filtros que la pantalla).
             var datos = analiticaService.calcular(resumen);
             Sheet analitica=workbook.createSheet("Indicadores de riesgo");
