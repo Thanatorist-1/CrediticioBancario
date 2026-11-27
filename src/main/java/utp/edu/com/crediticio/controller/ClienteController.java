@@ -102,26 +102,27 @@ public class ClienteController {
     }
 
     @PostMapping("/portal-cliente/solicitar")
-    public String solicitudPortal(@Valid @ModelAttribute("solicitudPortal") SolicitudPortalForm form,
+    public String solicitudPortal(@RequestParam(name = "dni", required = false) String dni,
+            @Valid @ModelAttribute("solicitudPortal") SolicitudPortalForm form,
             BindingResult result, Model model, RedirectAttributes flash) {
+        if (dni == null || dni.isBlank()) {
+            result.reject("cliente.no.encontrado", "No se encontró el cliente de la solicitud.");
+        }
         if (form.getPlazo() != null && !List.of(6, 12, 18, 24, 36, 48, 60, 120).contains(form.getPlazo())) {
             result.rejectValue("plazo", "plazo.invalido", "Selecciona uno de los plazos disponibles.");
         }
         if (result.hasErrors()) {
-            Cliente clienteActual = clienteService.buscarPorDni(form.getDni());
+            Cliente clienteActual = clienteService.buscarPorDni(dni);
             model.addAttribute("clienteActual", clienteActual);
             model.addAttribute("solicitudes", clienteActual == null ? List.of()
                     : solicitudService.listarPorCliente(clienteActual.getIdCliente()));
             return "clientes/portal-cliente";
         }
 
-        Cliente cliente = clienteService.buscarPorDni(form.getDni());
+        Cliente cliente = clienteService.buscarPorDni(dni);
         if (cliente == null) {
-            cliente = new Cliente();
-            cliente.setNombre(form.getNombreCompleto().trim());
-            cliente.setDni(form.getDni());
-            cliente.setEstado("Activo");
-            cliente = clienteService.guardar(cliente);
+            flash.addFlashAttribute("error", "No se encontró el cliente de la solicitud.");
+            return "redirect:/portal-cliente";
         }
         Solicitud solicitud = new Solicitud();
         solicitud.setIdCliente(cliente.getIdCliente());
@@ -132,7 +133,7 @@ public class ClienteController {
         solicitud.setEstado("Pendiente");
         solicitudService.guardar(solicitud);
         flash.addFlashAttribute("mensaje", "Solicitud registrada correctamente.");
-        flash.addAttribute("dni", form.getDni());
+        flash.addAttribute("dni", dni);
         return "redirect:/portal-cliente";
     }
 }
