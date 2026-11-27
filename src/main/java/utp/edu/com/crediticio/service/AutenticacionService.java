@@ -16,8 +16,10 @@ public class AutenticacionService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordHasher passwordHasher;
     private final ConsultaExternaService consultaExterna;
-    public AutenticacionService(ClienteRepository cr, UsuarioRepository ur, PasswordHasher ph, ConsultaExternaService externa) {
-        clienteRepository=cr; usuarioRepository=ur; passwordHasher=ph; consultaExterna=externa;
+    private final SupabaseAuthClient supabaseAuth;
+    public AutenticacionService(ClienteRepository cr, UsuarioRepository ur, PasswordHasher ph,
+            ConsultaExternaService externa, SupabaseAuthClient supabaseAuth) {
+        clienteRepository=cr; usuarioRepository=ur; passwordHasher=ph; consultaExterna=externa; this.supabaseAuth=supabaseAuth;
     }
     public Cuenta autenticar(String usuario, String clave) {
         if (usuario == null || clave == null) return null;
@@ -31,7 +33,37 @@ public class AutenticacionService {
                 && passwordHasher.verificar(clave, cliente.get().getPasswordHash())) {
             Cliente c=cliente.get(); return new Cuenta("CLIENTE", c.getIdCliente(), c.getNombre());
         }
+        // El personal se valida con Supabase Auth. La cuenta local únicamente conserva el rol y estado de la aplicación.
+        var autenticadoSupabase = supabaseAuth.autenticar(usuario.trim(), clave);
+        if (autenticadoSupabase.isPresent()) {
+            var cuentaSupabase = autenticadoSupabase.get();
+            Usuario u = usuarioRepository.findFirstByCorreoIgnoreCase(cuentaSupabase.correo())
+                    .orElseGet(() -> crearPersonalDesdeSupabase(cuentaSupabase));
+            if ("Activo".equalsIgnoreCase(u.getEstado()) && cuentaSupabase.rol().equals(u.getRol()))
+                return new Cuenta("PERSONAL", u.getIdUsuario(), u.getNombreCompleto());
+        }
         return null;
+    }
+
+    private Usuario crearPersonalDesdeSupabase(SupabaseAuthClient.CuentaSupabase cuenta) {
+        Usuario u = new Usuario();
+        u.setCorreo(cuenta.correo());
+        u.setNombreCompleto(nombreDesdeCorreo(cuenta.correo()));
+        u.setCargo("Personal autenticado con Supabase");
+        u.setRol(cuenta.rol());
+        u.setEstado("Activo");
+        return usuarioRepository.saveAndFlush(u);
+    }
+
+    private static String nombreDesdeCorreo(String correo) {
+        String base = correo.substring(0, correo.indexOf('@')).replace('.', ' ').replace('_', ' ').trim();
+        if (base.isBlank()) return "Usuario del banco";
+        StringBuilder resultado = new StringBuilder();
+        for (String parte : base.split("\\s+")) {
+            if (!resultado.isEmpty()) resultado.append(' ');
+            resultado.append(Character.toUpperCase(parte.charAt(0))).append(parte.substring(1));
+        }
+        return resultado.toString();
     }
     @Transactional
     public void registrarCliente(RegistroClienteForm form) {
